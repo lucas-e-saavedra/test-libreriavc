@@ -2,7 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
+
+group = 'com.github.tuta1612'
 
 
 android {
@@ -47,7 +48,7 @@ repositories {
 
 
 
-
+/*
 group = publishedGroupId
 version = libraryVersion
 
@@ -90,7 +91,7 @@ task sourcesJar(type: Jar) {
 }
 
 task javadoc(type: Javadoc) {
-    excludes = ['**/*.kt']
+    excludes = ['**TODO: /*.kt']
 
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
@@ -130,3 +131,4 @@ bintray {
         }
     }
 }
+*/
