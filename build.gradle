@@ -2,31 +2,6 @@
 
 buildscript {
     ext.kotlin_version = '1.3.21'
-    ext.kotlin_version = '1.3.11'
-
-    ext {
-        bintrayRepo = 'test-libreriavc'
-        bintrayName = 'test-libreriavc'
-
-        publishedGroupId = 'ar.com.lucassaavedra'
-        libraryName = 'test-libreriavc'
-        artifact = 'test-libreriavc'
-
-        libraryDescription = 'Esto es una prueba'
-
-        siteUrl = 'https://github.com/tuta1612/test-libreriavc'
-        gitUrl = 'https://github.com/tuta1612/test-libreriavc.git'
-
-        libraryVersion = '0.0.1'
-
-        developerId = 'lucas-saavedra'
-        developerName = 'Lucas Saavedra'
-        developerEmail = 'lucas.saavedra@assistcard.com'
-
-        licenseName = 'The Apache Software License, Version 2.0'
-        licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-        allLicenses = ["Apache-2.0"]
-    }
 
     repositories {
         google()
@@ -34,7 +9,7 @@ buildscript {
         
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.0'
+        classpath 'com.android.tools.build:gradle:3.3.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

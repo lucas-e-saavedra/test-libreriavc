@@ -2,7 +2,6 @@ package com.example.mylibrary
 
 import android.content.Context
 import com.android.volley.Request
-import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -13,6 +12,7 @@ object TokboxHelper {
     private val API_KEY = "46256142"
 
     private fun getQueue(ctx: Context)= Volley.newRequestQueue(ctx)
+
     fun getSessionId(ctx: Context, listener:(String?)->Unit) {
         val stringRequest = StringRequest(
             Request.Method.GET, API_URL_SESSION,
@@ -22,7 +22,7 @@ object TokboxHelper {
         getQueue(ctx).add(stringRequest)
     }
 
-    fun getToken(ctx: Context, sessionId: String, listener:(String?)->Unit){
+    fun getToken(ctx: Context, sessionId: String?, listener:(String?)->Unit){
         if (sessionId==null)
             listener(null)
         else{

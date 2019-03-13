@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import pub.devrel.easypermissions.EasyPermissions
 import android.util.Log
+import android.view.View
 import com.opentok.android.*
 import pub.devrel.easypermissions.AfterPermissionGranted
 import kotlinx.android.synthetic.main.activity_videochat.*
@@ -15,7 +16,7 @@ import com.opentok.android.Subscriber
 
 
 
-class VideoChatActivity : AppCompatActivity(), Session.SessionListener, PublisherKit.PublisherListener {
+class VideoChatActivity : AppCompatActivity(){
     //https://test-tokbox-assistcard.herokuapp.com/
 
     //private val API_KEY = "46256142"
@@ -49,6 +50,44 @@ class VideoChatActivity : AppCompatActivity(), Session.SessionListener, Publishe
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_videochat)
         requestPermissions()
+
+        btn_cam_switch.setOnClickListener {
+            tokboxPublisher.cycleCamera()
+        }
+        btn_cam_on.setOnClickListener {
+            tokboxPublisher.publishVideo = true
+            btn_cam_on.visibility = View.GONE
+            btn_cam_off.visibility = View.VISIBLE
+        }
+        btn_cam_off.setOnClickListener {
+            tokboxPublisher.publishVideo = false
+            btn_cam_on.visibility = View.VISIBLE
+            btn_cam_off.visibility = View.GONE
+        }
+        btn_mic_on.setOnClickListener {
+            tokboxPublisher.publishAudio = true
+            btn_mic_on.visibility = View.GONE
+            btn_mic_off.visibility = View.VISIBLE
+        }
+        btn_mic_off.setOnClickListener {
+            tokboxPublisher.publishAudio= false
+            btn_mic_on.visibility = View.VISIBLE
+            btn_mic_off.visibility = View.GONE
+        }
+        btn_call_end.setOnClickListener {
+            tokboxSession.disconnect()
+            finish()
+        }
+    }
+
+    override fun onPause() {
+        tokboxSession.onPause()
+        super.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        tokboxSession.onResume()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -64,7 +103,7 @@ class VideoChatActivity : AppCompatActivity(), Session.SessionListener, Publishe
 
 
             // initialize and connect to the session
-            tokboxSession.setSessionListener(this)
+            tokboxSession.setSessionListener(tokboxSesionListener)
             tokboxSession.connect(tokboxToken)
 
         } else {
@@ -77,56 +116,82 @@ class VideoChatActivity : AppCompatActivity(), Session.SessionListener, Publishe
         }
     }
 
+    val tokboxSuscriberVideoListener: SubscriberKit.VideoListener by lazy {
+        object : SubscriberKit.VideoListener {
+            override fun onVideoDataReceived(p0: SubscriberKit?) {
+            }
 
-    // Session.SessionListener methods
-    override fun onConnected(p0: Session?) {
-        Log.i(LOG_TAG, "Session Connected")
+            override fun onVideoEnabled(p0: SubscriberKit?, p1: String?) {
+            }
 
-        tokboxPublisher.setPublisherListener(this)
+            override fun onVideoDisableWarning(p0: SubscriberKit?) {
+            }
 
-        publisher_container.addView(tokboxPublisher.view)
-        tokboxSession.publish(tokboxPublisher)
-    }
+            override fun onVideoDisableWarningLifted(p0: SubscriberKit?) {
+            }
 
-    override fun onDisconnected(p0: Session?) {
-        Log.i(LOG_TAG, "Session Disconnected")
-    }
-
-    override fun onStreamReceived(p0: Session?, stream: Stream?) {
-        Log.i(LOG_TAG, "Stream Received")
-
-        Log.i(LOG_TAG, "Stream Received")
-
-        if (tokboxSuscriber == null) {
-            tokboxSuscriber = Subscriber.Builder(this, stream).build()
-            tokboxSession.subscribe(tokboxSuscriber)
-            subscriber_container.addView(tokboxSuscriber?.view)
+            override fun onVideoDisabled(p0: SubscriberKit?, p1: String?) {
+            }
         }
     }
 
-    override fun onStreamDropped(p0: Session?, p1: Stream?) {
-        Log.i(LOG_TAG, "Stream Dropped")
-        if (tokboxSuscriber!= null) {
-            tokboxSuscriber = null
-            subscriber_container.removeAllViews()
+    val tokboxPublisherListener :PublisherKit.PublisherListener by lazy {
+        object : PublisherKit.PublisherListener{
+            override fun onStreamCreated(p0: PublisherKit?, p1: Stream?) {
+                Log.i(LOG_TAG, "Publisher onStreamCreated")
+            }
+
+            override fun onStreamDestroyed(p0: PublisherKit?, p1: Stream?) {
+                Log.i(LOG_TAG, "Publisher onStreamDestroyed")
+            }
+
+            override fun onError(p0: PublisherKit?, opentokError: OpentokError?) {
+                Log.e(LOG_TAG, "Publisher error: " + opentokError?.message)
+            }
         }
     }
 
-    override fun onError(p0: Session?, opentokError: OpentokError?) {
-        Log.e(LOG_TAG, "Session error: " + opentokError?.message)
+    val tokboxSesionListener: Session.SessionListener by lazy {
+        object : Session.SessionListener{
+            override fun onConnected(p0: Session?) {
+                Log.i(LOG_TAG, "Session Connected")
+
+                tokboxPublisher.setPublisherListener(tokboxPublisherListener)
+
+                publisher_container.addView(tokboxPublisher.view)
+                tokboxSession.publish(tokboxPublisher)
+            }
+
+            override fun onStreamReceived(p0: Session?, stream: Stream?) {
+                Log.i(LOG_TAG, "Stream Received")
+
+                Log.i(LOG_TAG, "Stream Received")
+
+                if (tokboxSuscriber == null) {
+                    tokboxSuscriber = Subscriber.Builder(this@VideoChatActivity, stream).build()
+
+                    tokboxSuscriber?.setVideoListener(tokboxSuscriberVideoListener)
+                    tokboxSession.subscribe(tokboxSuscriber)
+                    subscriber_container.addView(tokboxSuscriber?.view)
+                }
+            }
+
+            override fun onStreamDropped(p0: Session?, p1: Stream?) {
+                Log.i(LOG_TAG, "Stream Dropped")
+                if (tokboxSuscriber!= null) {
+                    tokboxSuscriber = null
+                    subscriber_container.removeAllViews()
+                }
+            }
+
+            override fun onError(p0: Session?, opentokError: OpentokError?) {
+                Log.e(LOG_TAG, "Session error: " + opentokError?.message)
+            }
+
+            override fun onDisconnected(p0: Session?) {
+                Log.i(LOG_TAG, "Session Disconnected")
+            }
+        }
     }
 
-
-    // PublisherKit.PublisherListener methods
-    override fun onStreamCreated(p0: PublisherKit?, p1: Stream?) {
-        Log.i(LOG_TAG, "Publisher onStreamCreated")
-    }
-
-    override fun onStreamDestroyed(p0: PublisherKit?, p1: Stream?) {
-        Log.i(LOG_TAG, "Publisher onStreamDestroyed")
-    }
-
-    override fun onError(p0: PublisherKit?, opentokError: OpentokError?) {
-        Log.e(LOG_TAG, "Publisher error: " + opentokError?.message)
-    }
 }
